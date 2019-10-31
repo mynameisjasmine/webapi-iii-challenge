@@ -1,6 +1,16 @@
-const express = 'express';
+const express = require('express');
+const Posts = require('../posts/postDb.js')
+const helmet = require('helmet'); 
+const morgan = require('morgan')
 
-const router = express.Router();
+const router = require('express').Router();
+
+const server = express();
+
+
+server.use(helmet())
+server.use(express.json());
+server.use(morgan('dev'));
 
 router.get('/', (req, res) => {
 
