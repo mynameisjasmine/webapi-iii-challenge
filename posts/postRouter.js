@@ -1,6 +1,6 @@
 const express = require('express');
 const Posts = require('../posts/postDb.js')
-const helmet = require('helmet'); // importing helmet security middlware
+const helmet = require('helmet'); 
 const morgan = require('morgan')
 
 const router = require('express').Router();

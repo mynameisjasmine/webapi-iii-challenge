@@ -1,8 +1,9 @@
 const express = require('express');
 const Users = require('../users/userDb.js')
-const helmet = require('helmet'); // importing helmet security middlware
+const Posts = require('../posts/postDb/js')
+const helmet = require('helmet'); 
 const morgan = require('morgan')
-const logger = require('../server.js')
+
 
 const router = require('express').Router();
 
@@ -10,8 +11,6 @@ const server = express();
 
 server.use(helmet())
 server.use(express.json());
-server.use(logger);
-server.use(validateUserId)
 server.use(morgan('dev'));
 
 
@@ -26,28 +25,74 @@ res.status(500).json({message: "There was an error adding the user"})
 })
 });
 
-router.post('/:id/posts', (req, res) => {
-
+router.post('/:id/posts',validateUserId, validatePost, (req, res) => {
+Posts.insert(req.body)
+.then(post => {
+res.status(200).json(post)   
+})
+.catch(err => {
+console.log(err);
+res.status(500).json({message: "There was an error adding the post"})
+  })
 });
 
 router.get('/', (req, res) => {
-
+Users.get()
+.then(users => {
+res.status(200).json(users)    
+})
+.catch(err => {
+    console.log(err);
+    res.status(500).json({message: "There was an error getting the user"})
+      })
 });
 
-router.get('/:id', (req, res) => {
-
+router.get('/:id',validateUserId, (req, res) => {
+const id = req.params.id
+Users.getById(id)
+.then(userId => {
+res.status(200).json(userId)   
+})
+.catch(err => {
+console.log(err);
+res.status(500).json({message: "There was an error getting the user by this id"})
+ })
 });
 
-router.get('/:id/posts', (req, res) => {
-
+router.get('/:id/posts',validateUserId, (req, res) => {
+const id = req.params.id
+Posts.getUserPosts(id)
+.then(posts => {
+res.status(200).json(posts)     
+})
+.catch(err => {
+ console.log(err);
+ res.status(500).json({message: "There was an error getting the user's posts by this id"})
+  })
 });
 
-router.delete('/:id', (req, res) => {
-
+router.delete('/:id',validateUserId, (req, res) => {
+const id = req.params.id
+Users.remove(id)
+.then(deleted => {
+res.status(200).json(deleted)    
+})
+.catch(err => {
+ console.log(err);
+res.status(500).json({message: "There was an error deleting this record"})
+     })
 });
 
-router.put('/:id', (req, res) => {
-
+router.put('/:id',validateUserId, (req, res) => {
+const id = req.params.id
+Users.update(id, req.body)
+.then(updated => {
+res.status(200).json(updated)    
+})
+.catch(err => {
+console.log(err);
+res.status(500).json({message: "There was an error updating this record"})
+  })
 });
 
 //custom middleware
@@ -62,7 +107,7 @@ if(password === '') {
 
   } else {
     res.status(400).json({message: "invalid user id"})
-  
+   
  }
 };
 
@@ -74,11 +119,18 @@ if (!body) {
 res.status(400).json({message: "missing required name field"})  
 } else {
 next()
-}
+ }
 };
 
 function validatePost(req, res, next) {
-
+const {body, text} = req.body
+if (!body) {
+res.status(400).json({message: "missing post data"})   
+} else if (!text) {
+res.status(400).json({message: "missing required text field"})  
+} else {
+ next()
+ }
 };
 
 module.exports = router;
